@@ -1,7 +1,22 @@
-fn main() {}
+mod kepler;
 
+fn main() {
+    druid::AppLauncher::with_window(
+        druid::WindowDesc::new(
+            druid::widget::Tabs::new()
+                .with_tab("Kepler's third law", kepler::plot())
+                .with_tab("hoooiiiiii", druid::widget::Label::new("ohai there!")),
+        )
+        .title("bpho comp challenge"),
+    )
+    .launch(())
+    .unwrap();
+}
+
+#[allow(dead_code)]
 struct Planet {
     name: &'static str,
+    colour: plotters::style::RGBColor,
     mass: f32,
     distance: f32,
     radius: f32,
@@ -9,10 +24,13 @@ struct Planet {
     orbit: f32,
 }
 
+use plotters::style::full_palette;
+
 const PLANETS: [Planet; 10] = [
     // my favourite planet >:p
     Planet {
         name: "Sun",
+        colour: full_palette::ORANGE,
         mass: 332837.0,
         distance: 0.0,
         radius: 109.12,
@@ -21,6 +39,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Mercury",
+        colour: full_palette::AMBER_A400,
         mass: 0.055,
         distance: 0.387,
         radius: 0.38,
@@ -29,6 +48,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Venus",
+        colour: full_palette::ORANGE_A100,
         mass: 0.815,
         distance: 0.723,
         radius: 0.95,
@@ -37,6 +57,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Earth",
+        colour: full_palette::GREEN,
         mass: 1.0,
         distance: 1.0,
         radius: 1.0,
@@ -45,6 +66,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Mars",
+        colour: full_palette::RED_700,
         mass: 0.107,
         distance: 1.523,
         radius: 0.53,
@@ -53,6 +75,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Saturn",
+        colour: full_palette::ORANGE_50,
         mass: 95.16,
         distance: 9.58,
         radius: 9.45,
@@ -61,6 +84,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Jupiter",
+        colour: full_palette::DEEPORANGE_400,
         mass: 317.85,
         distance: 5.2,
         radius: 11.21,
@@ -69,6 +93,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Uranus",
+        colour: full_palette::CYAN_A400,
         mass: 14.5,
         distance: 19.29,
         radius: 4.01,
@@ -77,6 +102,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Neptune",
+        colour: full_palette::LIGHTBLUE_A200,
         mass: 17.2,
         distance: 30.25,
         radius: 3.88,
@@ -85,6 +111,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Pluto",
+        colour: full_palette::GREY,
         mass: 0.0,
         distance: 39.51,
         radius: 0.19,
