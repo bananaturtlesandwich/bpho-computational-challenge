@@ -75,7 +75,7 @@ const PLANETS: [Planet; 10] = [
     },
     Planet {
         name: "Saturn",
-        colour: full_palette::ORANGE_50,
+        colour: full_palette::AMBER_300,
         mass: 95.16,
         distance: 9.58,
         radius: 9.45,

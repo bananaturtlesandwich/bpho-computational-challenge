@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-plotters = { version = "0.3.4", default-features = false}
-plotters-druid = "0.3.0"
-druid = "0.8.3"
+plotters = { version = "0.3", default-features = false}
+plotters-druid = "0.3"
+druid = "0.8"
