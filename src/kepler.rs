@@ -5,7 +5,7 @@ pub fn plot() -> druid::widget::Container<super::State> {
     plotters_druid::Plot::new(|_, data: &super::State, root| {
         let mut chart = ChartBuilder::on(&root)
             .set_left_and_bottom_label_area_size(33)
-            .build_cartesian_2d(0f32..275.0 * data.scale, 0f32..275.0 * data.scale)
+            .build_cartesian_2d(0.0..275.0 * data.scale, 0.0..275.0 * data.scale)
             .unwrap();
         chart
             .configure_mesh()
@@ -19,9 +19,9 @@ pub fn plot() -> druid::widget::Container<super::State> {
             .unwrap();
         chart
             .draw_series(LineSeries::new(
-                (0..300).map(best_fit(|| {
+                [0, 300].into_iter().map(best_fit(|| {
                     super::PLANETS
-                        .into_iter()
+                        .iter()
                         .skip(1)
                         .map(|planet| (planet.orbit, planet.distance.powf(1.5)))
                 })),
@@ -31,7 +31,7 @@ pub fn plot() -> druid::widget::Container<super::State> {
         chart
             .draw_series(PointSeries::of_element(
                 // we don't want to include the sun
-                super::PLANETS.into_iter().skip(1),
+                super::PLANETS.iter().skip(1),
                 0,
                 RGBAColor::default(),
                 &|planet, _, _| {
