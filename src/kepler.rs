@@ -1,11 +1,11 @@
 use druid::WidgetExt;
 use plotters::prelude::*;
 
-pub fn plot() -> druid::widget::Container<()> {
-    plotters_druid::Plot::new(|_, _, root| {
+pub fn plot() -> druid::widget::Container<super::State> {
+    plotters_druid::Plot::new(|_, data: &super::State, root| {
         let mut chart = ChartBuilder::on(&root)
             .set_left_and_bottom_label_area_size(33)
-            .build_cartesian_2d(0f32..275.0, 0f32..275.0)
+            .build_cartesian_2d(0f32..275.0 * data.scale, 0f32..275.0 * data.scale)
             .unwrap();
         chart
             .configure_mesh()
@@ -13,8 +13,8 @@ pub fn plot() -> druid::widget::Container<()> {
             .y_desc("T/Yr")
             .bold_line_style(&full_palette::GREY_700)
             .light_line_style(&full_palette::GREY_800)
-            .axis_style(&full_palette::WHITE)
-            .label_style(&full_palette::WHITE)
+            .axis_style(&WHITE)
+            .label_style(&WHITE)
             .draw()
             .unwrap();
         chart
@@ -58,13 +58,14 @@ pub fn plot() -> druid::widget::Container<()> {
                         + Text::new(
                             planet.name,
                             (10, -10),
-                            FontDesc::new(FontFamily::SansSerif, 12.0, FontStyle::Normal)
+                            FontDesc::new(FontFamily::SansSerif, 15.0, FontStyle::Normal)
                                 .color(&WHITE),
                         )
                 },
             ))
             .unwrap();
     })
+    .controller(super::Mouse)
     .border(druid::Color::TRANSPARENT, 10.0)
 }
 

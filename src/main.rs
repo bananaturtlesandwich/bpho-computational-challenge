@@ -9,8 +9,30 @@ fn main() {
         )
         .title("bpho comp challenge"),
     )
-    .launch(())
+    .launch(State { scale: 1.0 })
     .unwrap();
+}
+
+#[derive(Clone, druid::Data)]
+pub struct State {
+    scale: f32,
+}
+
+struct Mouse;
+
+impl druid::widget::Controller<State, plotters_druid::Plot<State>> for Mouse {
+    fn event(
+        &mut self,
+        _: &mut plotters_druid::Plot<State>,
+        _: &mut druid::EventCtx,
+        event: &druid::Event,
+        state: &mut State,
+        _: &druid::Env,
+    ) {
+        if let druid::Event::Wheel(m) = event {
+            state.scale = (state.scale * 0.99f32.powf(-m.wheel_delta.y as f32)).clamp(0.01, 1.0);
+        }
+    }
 }
 
 #[allow(dead_code)]
