@@ -5,5 +5,11 @@ edition = "2021"
 
 [dependencies]
 plotters = { version = "0.3", default-features = false}
+# waiting on https://github.com/Pascal-So/plotters-druid/issues/1 to be resolved for web
 plotters-druid = "0.3"
 druid = "0.8"
+instant = "0.1"
+
+[target.'cfg(target_family = "wasm")'.dependencies]
+wasm-bindgen = "0.2"
+console_error_panic_hook = "0.1"

@@ -3,20 +3,6 @@ use plotters::prelude::*;
 
 pub fn plot() -> druid::widget::Split<super::State> {
     druid::widget::Split::columns(
-        druid::widget::Flex::column()
-            .with_child(druid::widget::Label::dynamic(
-                |&super::State { speed, .. }, _| format!("{} yr/sec", speed.max(1.0)),
-            ))
-            .with_child(
-                druid::widget::Slider::new()
-                    .axis(druid::widget::Axis::Vertical)
-                    .with_range(0.0, 250.0)
-                    .with_step(5.0)
-                    .annotated(50.0, 10.0)
-                    .fix_height(500.0)
-                    .lens(super::State::speed),
-            )
-            .center(),
         plotters_druid::Plot::new(|_, &super::State { scale, time, speed }, root| {
             let mut chart = ChartBuilder::on(root)
                 .set_left_and_bottom_label_area_size(28)
@@ -60,7 +46,7 @@ pub fn plot() -> druid::widget::Split<super::State> {
                     .plotting_area()
                     .draw(
                         &(EmptyElement::at(map((time.elapsed().as_secs_f32()
-                            * speed.max(1.0) as f32
+                            * speed.max(0.1) as f32
                             * 360.0)
                             / planet.orbit))
                             + Circle::new(
@@ -84,7 +70,7 @@ pub fn plot() -> druid::widget::Split<super::State> {
                             + Text::new(
                                 planet.name,
                                 (10, -10),
-                                FontDesc::new(FontFamily::SansSerif, 15.0, FontStyle::Normal)
+                                FontDesc::new(FontFamily::Serif, 15.0, FontStyle::Normal)
                                     .color(&WHITE),
                             )),
                     )
@@ -93,6 +79,20 @@ pub fn plot() -> druid::widget::Split<super::State> {
         })
         .controller(super::Animate)
         .border(druid::Color::TRANSPARENT, 10.0),
+        druid::widget::Flex::column()
+            .with_child(druid::widget::Label::dynamic(
+                |&super::State { speed, .. }, _| format!("{} yr/sec", speed.max(0.1)),
+            ))
+            .with_child(
+                druid::widget::Slider::new()
+                    .axis(druid::widget::Axis::Vertical)
+                    .with_range(0.0, 10.0)
+                    .with_step(0.5)
+                    .annotated(1.0, 0.5)
+                    .fix_height(500.0)
+                    .lens(super::State::speed),
+            )
+            .center(),
     )
-    .split_point(0.06)
+    .split_point(0.94)
 }

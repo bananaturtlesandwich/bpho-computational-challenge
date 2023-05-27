@@ -58,8 +58,7 @@ pub fn plot() -> druid::widget::Container<super::State> {
                         + Text::new(
                             planet.name,
                             (10, -10),
-                            FontDesc::new(FontFamily::SansSerif, 15.0, FontStyle::Normal)
-                                .color(&WHITE),
+                            FontDesc::new(FontFamily::Serif, 15.0, FontStyle::Normal).color(&WHITE),
                         )
                 },
             ))
