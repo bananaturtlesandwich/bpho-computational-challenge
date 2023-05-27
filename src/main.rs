@@ -1,27 +1,35 @@
 use plotters::style::full_palette;
 
+mod anim2d;
 mod kepler;
 mod orbits;
+
+#[derive(Clone, druid::Data, druid::Lens)]
+pub struct State {
+    scale: f32,
+    time: std::time::Instant,
+    speed: f64,
+}
 
 fn main() {
     druid::AppLauncher::with_window(
         druid::WindowDesc::new(
             druid::widget::Tabs::new()
                 .with_tab("Kepler's third law", kepler::plot())
-                .with_tab("orbits", orbits::plot()),
+                .with_tab("orbits", orbits::plot())
+                .with_tab("2d animation", anim2d::plot()),
         )
         .title("bpho comp challenge"),
     )
-    .launch(State { scale: 1.0 })
+    .launch(State {
+        scale: 1.0,
+        time: std::time::Instant::now(),
+        speed: 1.0,
+    })
     .unwrap();
 }
 
-#[derive(Clone, druid::Data)]
-pub struct State {
-    scale: f32,
-}
-
-struct Mouse;
+pub struct Mouse;
 
 impl druid::widget::Controller<State, plotters_druid::Plot<State>> for Mouse {
     fn event(
@@ -29,11 +37,47 @@ impl druid::widget::Controller<State, plotters_druid::Plot<State>> for Mouse {
         _: &mut plotters_druid::Plot<State>,
         _: &mut druid::EventCtx,
         event: &druid::Event,
-        state: &mut State,
+        State { scale, .. }: &mut State,
         _: &druid::Env,
     ) {
         if let druid::Event::Wheel(m) = event {
-            state.scale = (state.scale * 0.99_f32.powf(-m.wheel_delta.y as f32)).clamp(0.01, 1.0);
+            *scale = (*scale * 0.99_f32.powf(-m.wheel_delta.y as f32)).clamp(0.01, 1.0);
+        }
+    }
+}
+
+pub struct Animate;
+
+impl druid::widget::Controller<State, plotters_druid::Plot<State>> for Animate {
+    fn event(
+        &mut self,
+        _: &mut plotters_druid::Plot<State>,
+        ctx: &mut druid::EventCtx,
+        event: &druid::Event,
+        State { scale, .. }: &mut State,
+        _: &druid::Env,
+    ) {
+        match event {
+            druid::Event::AnimFrame(_) => {
+                ctx.request_paint();
+                ctx.request_anim_frame()
+            }
+            druid::Event::Wheel(m) => {
+                *scale = (*scale * 0.99_f32.powf(-m.wheel_delta.y as f32)).clamp(0.01, 1.0)
+            }
+            _ => (),
+        }
+    }
+    fn lifecycle(
+        &mut self,
+        _: &mut plotters_druid::Plot<State>,
+        ctx: &mut druid::LifeCycleCtx,
+        event: &druid::LifeCycle,
+        _: &State,
+        _: &druid::Env,
+    ) {
+        if let druid::LifeCycle::WidgetAdded = event {
+            ctx.request_anim_frame()
         }
     }
 }

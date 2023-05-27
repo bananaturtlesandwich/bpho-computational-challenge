@@ -2,18 +2,18 @@ use druid::WidgetExt;
 use plotters::prelude::*;
 
 pub fn plot() -> druid::widget::Container<super::State> {
-    plotters_druid::Plot::new(|_, data: &super::State, root| {
-        let mut chart = ChartBuilder::on(&root)
+    plotters_druid::Plot::new(|_, &super::State { scale, .. }, root| {
+        let mut chart = ChartBuilder::on(root)
             .set_left_and_bottom_label_area_size(33)
-            .build_cartesian_2d(0.0..275.0 * data.scale, 0.0..275.0 * data.scale)
+            .build_cartesian_2d(0.0..275.0 * scale, 0.0..275.0 * scale)
             .unwrap();
         chart
             .configure_mesh()
             .x_desc("(a/AU)^(3/2)")
             .y_desc("T/Yr")
-            .bold_line_style(&full_palette::GREY_700)
-            .light_line_style(&full_palette::GREY_800)
-            .axis_style(&WHITE)
+            .bold_line_style(full_palette::GREY_700)
+            .light_line_style(full_palette::GREY_800)
+            .axis_style(WHITE)
             .label_style(&WHITE)
             .draw()
             .unwrap();
