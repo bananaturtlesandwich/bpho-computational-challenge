@@ -4,6 +4,7 @@ use plotters::style::full_palette;
 use wasm_bindgen::prelude::*;
 
 mod anim2d;
+mod anim3d;
 mod kepler;
 mod orbits;
 
@@ -34,6 +35,7 @@ pub fn main() {
                 .with_tab("Kepler's third law", kepler::plot())
                 .with_tab("orbits", orbits::plot())
                 .with_tab("2d animation", anim2d::plot())
+                .with_tab("3d animation", anim3d::plot())
                 .on_click(|_, State { scale, .. }, _| *scale = 1.0),
         )
         .title("bpho comp challenge"),
@@ -109,6 +111,7 @@ struct Planet {
     radius: f32,
     rotation: f32,
     orbit: f32,
+    inclination: f32,
 }
 
 const PLANETS: [Planet; 10] = [
@@ -122,6 +125,7 @@ const PLANETS: [Planet; 10] = [
         radius: 109.12,
         rotation: 0.0,
         orbit: 0.0,
+        inclination: 0.0,
     },
     Planet {
         name: "Mercury",
@@ -132,6 +136,7 @@ const PLANETS: [Planet; 10] = [
         radius: 0.38,
         rotation: 58.65,
         orbit: 0.24,
+        inclination: 7.0,
     },
     Planet {
         name: "Venus",
@@ -142,6 +147,7 @@ const PLANETS: [Planet; 10] = [
         radius: 0.95,
         rotation: 243.02,
         orbit: 0.62,
+        inclination: 3.39,
     },
     Planet {
         name: "Earth",
@@ -152,6 +158,7 @@ const PLANETS: [Planet; 10] = [
         radius: 1.0,
         rotation: 1.0,
         orbit: 1.0,
+        inclination: 0.0,
     },
     Planet {
         name: "Mars",
@@ -162,6 +169,7 @@ const PLANETS: [Planet; 10] = [
         radius: 0.53,
         rotation: 1.03,
         orbit: 1.88,
+        inclination: 1.85,
     },
     Planet {
         name: "Jupiter",
@@ -172,6 +180,7 @@ const PLANETS: [Planet; 10] = [
         radius: 11.21,
         rotation: 0.41,
         orbit: 11.86,
+        inclination: 1.31,
     },
     Planet {
         name: "Saturn",
@@ -182,6 +191,7 @@ const PLANETS: [Planet; 10] = [
         radius: 9.45,
         rotation: 0.44,
         orbit: 29.63,
+        inclination: 2.49,
     },
     Planet {
         name: "Uranus",
@@ -192,6 +202,7 @@ const PLANETS: [Planet; 10] = [
         radius: 4.01,
         rotation: 0.72,
         orbit: 84.75,
+        inclination: 0.77,
     },
     Planet {
         name: "Neptune",
@@ -202,6 +213,7 @@ const PLANETS: [Planet; 10] = [
         radius: 3.88,
         rotation: 0.67,
         orbit: 166.34,
+        inclination: 1.77,
     },
     Planet {
         name: "Pluto",
@@ -212,5 +224,6 @@ const PLANETS: [Planet; 10] = [
         radius: 0.19,
         rotation: 6.39,
         orbit: 248.35,
+        inclination: 17.5,
     },
 ];
