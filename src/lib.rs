@@ -1,103 +1,101 @@
-use druid::WidgetExt;
 use plotters::style::full_palette;
-#[cfg(target_family = "wasm")]
-use wasm_bindgen::prelude::*;
 
 mod anim2d;
 mod anim3d;
 mod kepler;
 mod orbits;
 
-#[derive(Clone, druid::Lens)]
-pub struct State {
-    scale: f32,
-    time: instant::Instant,
-    speed: f64,
+#[derive(PartialEq, Clone)]
+enum Demo {
+    Kepler,
+    Orbits,
+    Anim2D,
+    Anim3D,
 }
 
-impl druid::Data for State {
-    fn same(&self, other: &Self) -> bool {
-        self.scale == other.scale && self.speed == other.speed
-    }
+pub struct App {
+    kepler: egui_plotter::Chart<f32>,
+    orbits: egui_plotter::Chart<f32>,
+    anim2d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
+    anim3d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
+    current: Demo,
 }
 
-#[cfg(target_family = "wasm")]
-#[wasm_bindgen]
-pub fn entry() {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
-    main()
-}
-
-pub fn main() {
-    druid::AppLauncher::with_window(
-        druid::WindowDesc::new(
-            druid::widget::Tabs::new()
-                .with_tab("Kepler's third law", kepler::plot())
-                .with_tab("orbits", orbits::plot())
-                .with_tab("2d animation", anim2d::plot())
-                .with_tab("3d animation", anim3d::plot())
-                .on_click(|_, State { scale, .. }, _| *scale = 1.0),
-        )
-        .title("bpho comp challenge"),
-    )
-    .launch(State {
-        scale: 1.0,
-        time: instant::Instant::now(),
-        speed: 1.0,
-    })
-    .unwrap();
-}
-
-pub struct Mouse;
-
-impl druid::widget::Controller<State, plotters_druid::Plot<State>> for Mouse {
-    fn event(
-        &mut self,
-        _: &mut plotters_druid::Plot<State>,
-        _: &mut druid::EventCtx,
-        event: &druid::Event,
-        State { scale, .. }: &mut State,
-        _: &druid::Env,
-    ) {
-        if let druid::Event::Wheel(m) = event {
-            *scale = (*scale * 0.99_f32.powf(-m.wheel_delta.y as f32)).clamp(0.01, 1.0);
+impl App {
+    pub fn new(ctx: &eframe::CreationContext) -> Self {
+        use egui_plotter::*;
+        // prevents artifacts on graphs
+        ctx.egui_ctx
+            .tessellation_options_mut(|tes| tes.feathering = false);
+        Self {
+            kepler: Chart::new(1.0).builder_cb(Box::new(kepler::plot)),
+            orbits: Chart::new(1.0).builder_cb(Box::new(orbits::plot)),
+            anim2d: Chart::new((1.0, instant::Instant::now(), 1.0))
+                .builder_cb(Box::new(anim2d::plot)),
+            anim3d: Chart::new((1.0, instant::Instant::now(), 1.0))
+                .pitch(0.3)
+                .yaw(0.7)
+                .mouse(MouseConfig::default().rotate(true))
+                .builder_cb(Box::new(anim3d::plot)),
+            current: Demo::Kepler,
         }
     }
+    fn animating(&self) -> bool {
+        matches!(self.current, Demo::Anim2D | Demo::Anim3D)
+    }
 }
 
-pub struct Animate;
-
-impl druid::widget::Controller<State, plotters_druid::Plot<State>> for Animate {
-    fn event(
-        &mut self,
-        _: &mut plotters_druid::Plot<State>,
-        ctx: &mut druid::EventCtx,
-        event: &druid::Event,
-        State { scale, .. }: &mut State,
-        _: &druid::Env,
-    ) {
-        match event {
-            druid::Event::AnimFrame(_) => {
-                ctx.request_paint();
-                ctx.request_anim_frame()
+impl eframe::App for App {
+    fn update(&mut self, ctx: &eframe::egui::Context, _: &mut eframe::Frame) {
+        use eframe::egui;
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.horizontal_top(|ui| {
+                let mut tab = |name: &str, demo: Demo| {
+                    if ui.selectable_label(self.current == demo, name).clicked() {
+                        self.current = demo;
+                    }
+                };
+                tab("Kepler's third law", Demo::Kepler);
+                tab("Orbits", Demo::Orbits);
+                tab("2D animated orbits", Demo::Anim2D);
+                tab("3D animated orbits", Demo::Anim3D);
+                ui.set_enabled(self.animating());
+                let mut stub = 1.0;
+                ui.add(
+                    egui::Slider::new(
+                        match self.current.clone() {
+                            Demo::Anim2D => &mut self.anim2d.get_data_mut().2,
+                            Demo::Anim3D => &mut self.anim3d.get_data_mut().2,
+                            _ => &mut stub,
+                        },
+                        0.1..=10.0,
+                    )
+                    .suffix(" years/second"),
+                );
+            });
+            ui.vertical_centered_justified(|ui| match self.current {
+                Demo::Kepler => self.kepler.draw(ui),
+                Demo::Orbits => self.orbits.draw(ui),
+                Demo::Anim2D => self.anim2d.draw(ui),
+                Demo::Anim3D => self.anim3d.draw(ui),
+            });
+            ui.input(|e| {
+                let set = |scale: &mut f32| {
+                    *scale *= 0.99_f32.powf(e.scroll_delta.y);
+                    *scale /= e.zoom_delta();
+                    *scale = scale.clamp(0.01, 1.0);
+                };
+                match self.current {
+                    Demo::Kepler => set(self.kepler.get_data_mut()),
+                    Demo::Orbits => set(self.orbits.get_data_mut()),
+                    Demo::Anim2D => set(&mut self.anim2d.get_data_mut().0),
+                    Demo::Anim3D => set(&mut self.anim3d.get_data_mut().0),
+                }
+            });
+            if self.animating() {
+                ctx.request_repaint()
             }
-            druid::Event::Wheel(m) => {
-                *scale = (*scale * 0.99_f32.powf(-m.wheel_delta.y as f32)).clamp(0.01, 1.0)
-            }
-            _ => (),
-        }
-    }
-    fn lifecycle(
-        &mut self,
-        _: &mut plotters_druid::Plot<State>,
-        ctx: &mut druid::LifeCycleCtx,
-        event: &druid::LifeCycle,
-        _: &State,
-        _: &druid::Env,
-    ) {
-        if let druid::LifeCycle::WidgetAdded = event {
-            ctx.request_anim_frame()
-        }
+        });
     }
 }
 

@@ -3,6 +3,9 @@
     <head>
         <meta charset="utf-8">
         <title>bpho comp challenge</title>
+        <link data-trunk rel="rust" data-wasm-opt="2" />
+        <base data-trunk-public-url />
+        <link data-trunk rel="copy-file" href="./index.js" />
         <style>
             html,
             body,
@@ -17,10 +20,6 @@
     </head>
     <body>
         <noscript>enable javascript in your browser!</noscript>
-        <div style="text-align: center; margin: 0px; padding: 0px;">
-            <canvas id="canvas"></canvas>
-        </div>
-
-        <script type="module" src="./index.js" type="application/javascript"></script>
+        <canvas id="canvas"></canvas>
     </body>
 </html>
