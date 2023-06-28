@@ -3,7 +3,7 @@ use plotters::prelude::*;
 pub fn plot(
     root: &mut DrawingArea<egui_plotter::EguiBackend, plotters::coord::Shift>,
     trans: &egui_plotter::Transform,
-    (scale, time, speed): &(f32, instant::Instant, f32),
+    &(scale, time, speed): &(f32, instant::Instant, f32),
 ) {
     let mut chart = ChartBuilder::on(root)
         .set_left_and_bottom_label_area_size(25)

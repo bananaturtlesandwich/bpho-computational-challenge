@@ -3,7 +3,7 @@ use plotters::prelude::*;
 pub fn plot(
     root: &mut DrawingArea<egui_plotter::EguiBackend, plotters::coord::Shift>,
     _: &egui_plotter::Transform,
-    scale: &f32,
+    &scale: &f32,
 ) {
     let mut chart = ChartBuilder::on(root)
         .set_left_and_bottom_label_area_size(25)
@@ -11,8 +11,8 @@ pub fn plot(
         .unwrap();
     chart
         .configure_mesh()
-        .x_desc("(a/AU)^(3/2)")
-        .y_desc("T/Yr")
+        // .x_desc("distance from sun^1.5/AU")
+        // .y_desc("orbit time/years")
         .bold_line_style(full_palette::GREY_700)
         .light_line_style(full_palette::GREY_800)
         .axis_style(WHITE)

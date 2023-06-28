@@ -1,5 +1,6 @@
 use plotters::style::full_palette;
 
+mod angles;
 mod anim2d;
 mod anim3d;
 mod kepler;
@@ -11,6 +12,7 @@ enum Demo {
     Orbits,
     Anim2D,
     Anim3D,
+    Angles,
 }
 
 pub struct App {
@@ -18,6 +20,7 @@ pub struct App {
     orbits: egui_plotter::Chart<f32>,
     anim2d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
     anim3d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
+    angles: egui_plotter::Chart<usize>,
     current: Demo,
 }
 
@@ -37,11 +40,9 @@ impl App {
                 .yaw(0.7)
                 .mouse(MouseConfig::default().rotate(true))
                 .builder_cb(Box::new(anim3d::plot)),
+            angles: Chart::new(9).builder_cb(Box::new(angles::plot)),
             current: Demo::Kepler,
         }
-    }
-    fn animating(&self) -> bool {
-        matches!(self.current, Demo::Anim2D | Demo::Anim3D)
     }
 }
 
@@ -59,25 +60,37 @@ impl eframe::App for App {
                 tab("Orbits", Demo::Orbits);
                 tab("2D animated orbits", Demo::Anim2D);
                 tab("3D animated orbits", Demo::Anim3D);
-                ui.set_enabled(self.animating());
-                let mut stub = 1.0;
-                ui.add(
-                    egui::Slider::new(
-                        match self.current.clone() {
-                            Demo::Anim2D => &mut self.anim2d.get_data_mut().2,
-                            Demo::Anim3D => &mut self.anim3d.get_data_mut().2,
-                            _ => &mut stub,
-                        },
-                        0.1..=10.0,
-                    )
-                    .suffix(" years/second"),
-                );
+                tab("Orbit angle vs time", Demo::Angles);
+                match self.current {
+                    Demo::Anim2D => {
+                        ui.add(
+                            egui::Slider::new(&mut self.anim2d.get_data_mut().2, 0.1..=10.0)
+                                .suffix(" years/second"),
+                        );
+                    }
+                    Demo::Anim3D => {
+                        ui.add(
+                            egui::Slider::new(&mut self.anim3d.get_data_mut().2, 0.1..=10.0)
+                                .suffix(" years/second"),
+                        );
+                    }
+                    Demo::Angles => {
+                        egui::ComboBox::from_id_source("angles").show_index(
+                            ui,
+                            self.angles.get_data_mut(),
+                            PLANETS.len(),
+                            |i| PLANETS[i].name,
+                        );
+                    }
+                    _ => (),
+                }
             });
             ui.vertical_centered_justified(|ui| match self.current {
                 Demo::Kepler => self.kepler.draw(ui),
                 Demo::Orbits => self.orbits.draw(ui),
                 Demo::Anim2D => self.anim2d.draw(ui),
                 Demo::Anim3D => self.anim3d.draw(ui),
+                Demo::Angles => self.angles.draw(ui),
             });
             ui.input(|e| {
                 let set = |scale: &mut f32| {
@@ -90,9 +103,10 @@ impl eframe::App for App {
                     Demo::Orbits => set(self.orbits.get_data_mut()),
                     Demo::Anim2D => set(&mut self.anim2d.get_data_mut().0),
                     Demo::Anim3D => set(&mut self.anim3d.get_data_mut().0),
+                    _ => (),
                 }
             });
-            if self.animating() {
+            if matches!(self.current, Demo::Anim2D | Demo::Anim3D) {
                 ctx.request_repaint()
             }
         });
