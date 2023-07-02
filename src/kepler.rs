@@ -11,8 +11,8 @@ pub fn plot(
         .unwrap();
     chart
         .configure_mesh()
-        // .x_desc("distance from sun^1.5/AU")
-        // .y_desc("orbit time/years")
+        .x_desc("distance from sun^1.5/AU")
+        .y_desc("orbit time/years")
         .bold_line_style(full_palette::GREY_700)
         .light_line_style(full_palette::GREY_800)
         .axis_style(WHITE)
@@ -21,10 +21,9 @@ pub fn plot(
         .unwrap();
     chart
         .draw_series(LineSeries::new(
-            [0, 300].into_iter().map(best_fit(|| {
+            [0.0, 300.0].into_iter().map(best_fit(|| {
                 super::PLANETS
                     .iter()
-                    .skip(1)
                     .map(|planet| (planet.orbit, planet.distance.powf(1.5)))
             })),
             GREEN,
@@ -32,8 +31,7 @@ pub fn plot(
         .unwrap();
     chart
         .draw_series(PointSeries::of_element(
-            // we don't want to include the sun
-            super::PLANETS.iter().skip(1),
+            super::PLANETS.iter(),
             0,
             RGBAColor::default(),
             &|planet, _, _| {
@@ -68,7 +66,7 @@ pub fn plot(
 }
 
 /// returns a line of best fit using the minimum sum of squared errors algorithm
-fn best_fit<I: Iterator<Item = (f32, f32)>>(iter: impl Fn() -> I) -> impl Fn(i32) -> (f32, f32) {
+fn best_fit<I: Iterator<Item = (f32, f32)>>(iter: impl Fn() -> I) -> impl Fn(f32) -> (f32, f32) {
     let len = iter().count() as f32;
     let (meanx, meany) = iter()
         .reduce(|(acc_x, acc_y), (x, y)| (acc_x + x, acc_y + y))
@@ -82,5 +80,5 @@ fn best_fit<I: Iterator<Item = (f32, f32)>>(iter: impl Fn() -> I) -> impl Fn(i32
     });
     let m = numer / denom;
     let c = meany - m * meanx;
-    move |x: i32| (x as f32, m * x as f32 + c)
+    move |x: f32| (x, m * x + c)
 }

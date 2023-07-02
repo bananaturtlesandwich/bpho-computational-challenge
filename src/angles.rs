@@ -20,28 +20,41 @@ pub fn plot(
         .draw()
         .unwrap();
     let planet = &super::PLANETS[index];
-    let map = |theta: i32, eccentricity: f32| {
-        // h = theta/n = 1/1000 because a = 0 so n = 1000 * theta
-        (
-            planet.orbit * (1.0 - eccentricity.powi(2)).powf(1.5) * 1.0
-                / (2.0 * std::f32::consts::PI),
-            // computing f(x0)...f(xn) is hella expensive :/
-            // * (0..1000 * theta)
-            //     .map(|theta| theta as f32 / (1.0 - eccentricity * (theta as f32).cos()).powi(2))
-            //     .enumerate()
-            //     .fold(0.0, |acc, (i, y)| {
-            //         if i == 0 || i == 1000 * theta as usize - 1 {
-            //             acc + y
-            //         } else if i % 2 == 1 {
-            //             acc + 4.0 * y
-            //         } else {
-            //             acc + 2.0 * y
-            //         }
-            //     }),
-            theta as f32,
-        )
-    };
+    // when eccentricity is much less than 1 (in this case zero) t is roughly P * theta
     chart
-        .draw_series(LineSeries::new((0..800).map(|arg| map(arg, 0.0)), WHITE))
+        .draw_series(LineSeries::new(
+            [0.0, 800.0].into_iter().map(|x| (x, planet.orbit * x)),
+            WHITE,
+        ))
         .unwrap();
+    // i've got a bit of brain block on this
+
+    // let theta: Vec<_> = (0_f32..20.0)
+    //     .step(0.001)
+    //     .values()
+    //     .map(|theta| (1.0 - planet.eccentricity * theta.cos()).powi(-2))
+    //     .collect();
+    // // multiply by coefficients
+    // let len = theta.len();
+    // chart
+    //     .draw_series(LineSeries::new(
+    //         (0_f32..20.0).step(0.01).values().map(|x| {
+    //             let mut theta = theta[..len - 1 - (x * 1000.0) as usize].to_vec();
+    //             for (i, val) in theta[1..len - 2].iter_mut().enumerate() {
+    //                 *val *= if i % 2 == 1 { 4.0 } else { 2.0 }
+    //             }
+    //             (
+    //                 x,
+    //                 planet.orbit
+    //                     * (1.0 - planet.eccentricity.powi(2)).powf(1.5)
+    //                     * std::f32::consts::FRAC_1_PI
+    //                     / 2.0
+    //                     / 1000.0
+    //                     / 3.0
+    //                     * theta.into_iter().sum::<f32>(),
+    //             )
+    //         }),
+    //         WHITE,
+    //     ))
+    //     .unwrap();
 }

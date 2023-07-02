@@ -6,16 +6,7 @@ pub fn plot(
     &(scale, time, speed): &(f32, instant::Instant, f32),
 ) {
     let mut chart = ChartBuilder::on(root)
-        .set_left_and_bottom_label_area_size(25)
         .build_cartesian_2d(-30.0 * scale..50.0 * scale, -40.0 * scale..40.0 * scale)
-        .unwrap();
-    chart
-        .configure_mesh()
-        .bold_line_style(full_palette::GREY_700)
-        .light_line_style(full_palette::GREY_800)
-        .axis_style(WHITE)
-        .label_style(&WHITE)
-        .draw()
         .unwrap();
     chart
         .plotting_area()
@@ -29,7 +20,7 @@ pub fn plot(
             },
         ))
         .unwrap();
-    for planet in super::PLANETS.iter().skip(1) {
+    for planet in super::PLANETS.iter() {
         let map = |theta: f32| {
             let (sin, cos) = theta.to_radians().sin_cos();
             let r = (planet.distance * (1.0 - planet.eccentricity.powi(2)))
