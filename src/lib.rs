@@ -20,7 +20,7 @@ pub struct App {
     orbits: egui_plotter::Chart<f32>,
     anim2d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
     anim3d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
-    angles: egui_plotter::Chart<usize>,
+    angles: egui_plotter::Chart<(usize, Vec<(f32, f32)>)>,
     tab: Tab,
 }
 
@@ -30,7 +30,7 @@ impl App {
         // prevents artifacts on graphs
         ctx.egui_ctx
             .tessellation_options_mut(|tes| tes.feathering = false);
-        Self {
+        let mut app = Self {
             kepler: Chart::new(1.0).builder_cb(Box::new(kepler::plot)),
             orbits: Chart::new(1.0).builder_cb(Box::new(orbits::plot)),
             anim2d: Chart::new((1.0, instant::Instant::now(), 1.0))
@@ -40,9 +40,43 @@ impl App {
                 .yaw(0.7)
                 .mouse(MouseConfig::default().rotate(true))
                 .builder_cb(Box::new(anim3d::plot)),
-            angles: Chart::new(8).builder_cb(Box::new(angles::plot)),
+            angles: Chart::new((8, Vec::new())).builder_cb(Box::new(angles::plot)),
             tab: Tab::Kepler,
-        }
+        };
+        app.precompute_angles();
+        app
+    }
+    fn precompute_angles(&mut self) {
+        use plotters::prelude::*;
+        let planet = &PLANETS[self.angles.get_data().0];
+        let vals: Vec<_> = (0_f32..20.0)
+            .step(0.001)
+            .values()
+            .map(|theta| (1.0 - planet.eccentricity * theta.cos()).powi(-2))
+            .collect();
+        self.angles.get_data_mut().1 = (0.01_f32..20.0)
+            .step(0.01)
+            .values()
+            .map(|y| {
+                let mut theta = vals[..(y * 1000.0) as usize].to_vec();
+                let len = theta.len();
+                for (i, val) in theta[1..len - 2].iter_mut().enumerate() {
+                    *val *= if i % 2 == 1 { 4.0 } else { 2.0 }
+                }
+                (
+                    planet.orbit
+                        * (1.0 - planet.eccentricity.powi(2)).powf(1.5)
+                        // 1 / (2 * pi)
+                        * std::f32::consts::FRAC_1_PI
+                        / 2.0
+                        // h / 3
+                        * 0.001
+                        / 3.0
+                        * theta.into_iter().sum::<f32>(),
+                    y,
+                )
+            })
+            .collect();
     }
 }
 
@@ -75,12 +109,14 @@ impl eframe::App for App {
                         );
                     }
                     Tab::Angles => {
-                        egui::ComboBox::from_id_source("angles").show_index(
-                            ui,
-                            self.angles.get_data_mut(),
-                            PLANETS.len(),
-                            |i| PLANETS[i].name,
-                        );
+                        if egui::ComboBox::from_id_source("angles")
+                            .show_index(ui, &mut self.angles.get_data_mut().0, PLANETS.len(), |i| {
+                                PLANETS[i].name
+                            })
+                            .changed()
+                        {
+                            self.precompute_angles()
+                        }
                     }
                     _ => (),
                 }

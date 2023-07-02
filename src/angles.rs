@@ -3,8 +3,9 @@ use plotters::prelude::*;
 pub fn plot(
     root: &mut DrawingArea<egui_plotter::EguiBackend, plotters::coord::Shift>,
     _: &egui_plotter::Transform,
-    &index: &usize,
+    (index, points): &(usize, Vec<(f32, f32)>),
 ) {
+    let planet = &super::PLANETS[*index];
     let mut chart = ChartBuilder::on(root)
         .set_left_and_bottom_label_area_size(25)
         .build_cartesian_2d(0_f32..800.0, 0_f32..20.0)
@@ -19,7 +20,6 @@ pub fn plot(
         .label_style(&WHITE)
         .draw()
         .unwrap();
-    let planet = &super::PLANETS[index];
     // when eccentricity is zero t is roughly P * theta
     chart
         .draw_series(LineSeries::new(
@@ -28,34 +28,8 @@ pub fn plot(
         ))
         .unwrap();
 
-    let vals: Vec<_> = (0_f32..20.0)
-        .step(0.001)
-        .values()
-        .map(|theta| (1.0 - planet.eccentricity * theta.cos()).powi(-2))
-        .collect();
     // multiply by coefficients
     chart
-        .draw_series(LineSeries::new(
-            (0.01_f32..20.0).step(0.01).values().map(|y| {
-                let mut theta = vals[..(y * 1000.0) as usize].to_vec();
-                let len = theta.len();
-                for (i, val) in theta[1..len - 2].iter_mut().enumerate() {
-                    *val *= if i % 2 == 1 { 4.0 } else { 2.0 }
-                }
-                (
-                    planet.orbit
-                        * (1.0 - planet.eccentricity.powi(2)).powf(1.5)
-                        // 1/(2*pi)
-                        * std::f32::consts::FRAC_1_PI
-                        / 2.0
-                        // h/3
-                        * 0.001
-                        / 3.0
-                        * theta.into_iter().sum::<f32>(),
-                    y,
-                )
-            }),
-            WHITE,
-        ))
+        .draw_series(LineSeries::new(points.iter().cloned(), WHITE))
         .unwrap();
 }
