@@ -121,6 +121,15 @@ impl eframe::App for App {
                     }
                     _ => (),
                 }
+                if matches!(
+                    self.tab,
+                    Tab::Kepler | Tab::Orbits | Tab::Anim2D | Tab::Anim3D
+                ) {
+                    ui.label("zoom: scroll/pinch");
+                }
+                if matches!(self.tab, Tab::Anim3D) {
+                    ui.label("rotate: left click + drag");
+                }
             });
             ui.vertical_centered_justified(|ui| match self.tab {
                 Tab::Kepler => self.kepler.draw(ui),
