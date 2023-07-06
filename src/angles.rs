@@ -8,7 +8,7 @@ pub fn plot(
     let planet = &super::PLANETS[*index];
     let mut chart = ChartBuilder::on(root)
         .set_left_and_bottom_label_area_size(25)
-        .build_cartesian_2d(0_f32..800.0, 0_f32..20.0)
+        .build_cartesian_2d(0_f32..planet.orbit * 3.0, 0_f32..20.0)
         .unwrap();
     chart
         .configure_mesh()
@@ -25,12 +25,13 @@ pub fn plot(
     - (1 - ecc^2)^3/2 evaluates to 1 so no need to include in calculation
     - integral is always θ since 1 / (1 - ecc * cosθ) gives the line y = 1 so no need to estimate
     - therefore t = y * planet.orbit * 1/2π
+    - however this doesn't scale well so i'll reverse it to  y = t/(planet.orbit * 1/2π)
     */
     chart
         .draw_series(LineSeries::new(
-            [0.0, 20.0]
+            [0.0, planet.orbit * 3.0]
                 .into_iter()
-                .map(|y| (y * planet.orbit * std::f32::consts::FRAC_1_PI / 2.0, y)),
+                .map(|x| (x, x / planet.orbit / std::f32::consts::FRAC_1_PI * 2.0)),
             WHITE,
         ))
         .unwrap();

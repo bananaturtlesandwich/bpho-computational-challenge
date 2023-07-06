@@ -57,7 +57,7 @@ impl App {
             .map(|θ| (1.0 - planet.eccentricity * θ.cos()).powi(-2))
             .collect();
         self.angles.get_data_mut().1 = (0.01_f32..20.0)
-            .step(0.5)
+            .step(0.1)
             .values()
             .map(|y| {
                 let mut vals = vals[..(y * 1000.0) as usize].to_vec();
@@ -233,7 +233,7 @@ const PLANETS: [Planet; 9] = [
         orbit: 166.34,
         inclination: 1.77,
     },
-    // my favourite planet >:)
+    // my favourite planet >:p
     Planet {
         name: "Pluto",
         colour: full_palette::GREY,
