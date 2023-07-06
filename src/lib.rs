@@ -7,6 +7,7 @@ mod anim2d;
 mod anim3d;
 mod kepler;
 mod orbits;
+mod spiral;
 
 #[derive(PartialEq, Clone)]
 enum Tab {
@@ -15,6 +16,7 @@ enum Tab {
     Anim2D,
     Anim3D,
     Angles,
+    Spiral,
 }
 
 pub struct App {
@@ -23,6 +25,7 @@ pub struct App {
     anim2d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
     anim3d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
     angles: egui_plotter::Chart<(usize, Vec<(f32, f32)>)>,
+    spiral: egui_plotter::Chart<(usize, usize, Vec<[(f32, f32); 2]>)>,
     tab: Tab,
 }
 
@@ -43,12 +46,14 @@ impl App {
                 .mouse(MouseConfig::default().rotate(true))
                 .builder_cb(Box::new(anim3d::plot)),
             angles: Chart::new((8, Vec::new())).builder_cb(Box::new(angles::plot)),
+            spiral: Chart::new((1, 2, Vec::new())).builder_cb(Box::new(spiral::plot)),
             tab: Tab::Kepler,
         };
-        app.precompute_angles();
+        app.angles();
+        app.spiral();
         app
     }
-    fn precompute_angles(&mut self) {
+    fn angles(&mut self) {
         use plotters::prelude::*;
         let planet = &PLANETS[self.angles.get_data().0];
         let vals: Vec<_> = (0_f32..20.0)
@@ -79,6 +84,26 @@ impl App {
             })
             .collect();
     }
+    fn spiral(&mut self) {
+        use plotters::prelude::*;
+        let &(i1, i2, ..) = self.spiral.get_data();
+        let (p1, p2) = (&PLANETS[i1], &PLANETS[i2]);
+        let max = 10.0 * p1.orbit.max(p2.orbit);
+        self.spiral.get_data_mut().2 = (0.0..max)
+            .step(max / 1234.0)
+            .values()
+            .map(|time| {
+                let calc = |planet: &Planet| {
+                    let θ = 2.0 * std::f32::consts::PI * time / planet.orbit;
+                    let (sin, cos) = θ.sin_cos();
+                    let r = (planet.distance * (1.0 - planet.eccentricity.powi(2)))
+                        / (1.0 - planet.eccentricity * cos);
+                    (r * cos, r * sin)
+                };
+                [calc(p1), calc(p2)]
+            })
+            .collect()
+    }
 }
 
 impl eframe::App for App {
@@ -96,6 +121,7 @@ impl eframe::App for App {
                 tab("2D animated orbits", Tab::Anim2D);
                 tab("3D animated orbits", Tab::Anim3D);
                 tab("Orbit angle vs time", Tab::Angles);
+                tab("Spirographs", Tab::Spiral);
                 match self.tab {
                     Tab::Anim2D => {
                         ui.add(
@@ -116,7 +142,25 @@ impl eframe::App for App {
                             })
                             .changed()
                         {
-                            self.precompute_angles()
+                            self.angles()
+                        }
+                    }
+                    Tab::Spiral => {
+                        if egui::ComboBox::from_id_source("p1")
+                            .show_index(ui, &mut self.spiral.get_data_mut().0, PLANETS.len(), |i| {
+                                PLANETS[i].name
+                            })
+                            .changed()
+                            | egui::ComboBox::from_id_source("p2")
+                                .show_index(
+                                    ui,
+                                    &mut self.spiral.get_data_mut().1,
+                                    PLANETS.len(),
+                                    |i| PLANETS[i].name,
+                                )
+                                .changed()
+                        {
+                            self.spiral()
                         }
                     }
                     _ => (),
@@ -137,6 +181,7 @@ impl eframe::App for App {
                 Tab::Anim2D => self.anim2d.draw(ui),
                 Tab::Anim3D => self.anim3d.draw(ui),
                 Tab::Angles => self.angles.draw(ui),
+                Tab::Spiral => self.spiral.draw(ui),
             });
             ui.input(|e| {
                 let set = |scale: &mut f32| {

@@ -36,6 +36,6 @@ pub fn plot(
         ))
         .unwrap();
     chart
-        .draw_series(LineSeries::new(points.iter().cloned(), GREEN))
+        .draw_series(LineSeries::new(points.iter().copied(), GREEN))
         .unwrap();
 }

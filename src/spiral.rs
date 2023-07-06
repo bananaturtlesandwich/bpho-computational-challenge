@@ -3,8 +3,10 @@ use plotters::prelude::*;
 pub fn plot(
     root: &mut DrawingArea<egui_plotter::EguiBackend, plotters::coord::Shift>,
     _: &egui_plotter::Transform,
-    scale: &f32,
+    (i1, i2, lines): &(usize, usize, Vec<[(f32, f32); 2]>),
 ) {
+    let (p1, p2) = (&super::PLANETS[*i1], &super::PLANETS[*i2]);
+    let scale = p1.distance.max(p2.distance) / 30.0;
     let mut chart = ChartBuilder::on(root)
         .build_cartesian_2d(-30.0 * scale..50.0 * scale, -40.0 * scale..40.0 * scale)
         .unwrap();
@@ -20,7 +22,12 @@ pub fn plot(
             },
         ))
         .unwrap();
-    for planet in super::PLANETS.iter() {
+    for line in lines.iter() {
+        chart
+            .draw_series(LineSeries::new(line.iter().copied(), WHITE))
+            .unwrap();
+    }
+    for planet in [p1, p2] {
         chart
             .draw_series(LineSeries::new(
                 (0.0..361.0).step(2.5).values().map(|θ| {
