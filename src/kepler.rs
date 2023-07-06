@@ -11,8 +11,8 @@ pub fn plot(
         .unwrap();
     chart
         .configure_mesh()
-        .x_desc("distance from sun^1.5/AU")
-        .y_desc("orbit time/years")
+        // .x_desc("distance from sun^1.5/AU")
+        // .y_desc("orbit time/years")
         .bold_line_style(full_palette::GREY_700)
         .light_line_style(full_palette::GREY_800)
         .axis_style(WHITE)

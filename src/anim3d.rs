@@ -30,8 +30,8 @@ pub fn plot(
         ))
         .unwrap();
     for planet in super::PLANETS.iter() {
-        let map = |theta: f32| {
-            let (sin, cos) = theta.to_radians().sin_cos();
+        let map = |θ: f32| {
+            let (sin, cos) = θ.to_radians().sin_cos();
             let r = (planet.distance * (1.0 - planet.eccentricity.powi(2)))
                 / (1.0 - planet.eccentricity * cos);
             let (x, y) = (r * cos, r * sin);

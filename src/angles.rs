@@ -20,16 +20,21 @@ pub fn plot(
         .label_style(&WHITE)
         .draw()
         .unwrap();
-    // when eccentricity is zero t is roughly P * theta
+    /*
+      when eccentricity is zero:
+    - (1 - ecc^2)^3/2 evaluates to 1 so no need to include in calculation
+    - integral is always θ since 1 / (1 - ecc * cosθ) gives the line y = 1 so no need to estimate
+    - therefore t = y * planet.orbit * 1/2π
+    */
     chart
         .draw_series(LineSeries::new(
-            [0.0, 800.0].into_iter().map(|x| (x, planet.orbit * x)),
+            [0.0, 20.0]
+                .into_iter()
+                .map(|y| (y * planet.orbit * std::f32::consts::FRAC_1_PI / 2.0, y)),
             WHITE,
         ))
         .unwrap();
-
-    // multiply by coefficients
     chart
-        .draw_series(LineSeries::new(points.iter().cloned(), WHITE))
+        .draw_series(LineSeries::new(points.iter().cloned(), GREEN))
         .unwrap();
 }

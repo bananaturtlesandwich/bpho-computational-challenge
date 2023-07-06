@@ -1,3 +1,5 @@
+#![allow(mixed_script_confusables)]
+
 use plotters::style::full_palette;
 
 mod angles;
@@ -52,27 +54,26 @@ impl App {
         let vals: Vec<_> = (0_f32..20.0)
             .step(0.001)
             .values()
-            .map(|theta| (1.0 - planet.eccentricity * theta.cos()).powi(-2))
+            .map(|θ| (1.0 - planet.eccentricity * θ.cos()).powi(-2))
             .collect();
         self.angles.get_data_mut().1 = (0.01_f32..20.0)
-            .step(0.01)
+            .step(0.5)
             .values()
             .map(|y| {
-                let mut theta = vals[..(y * 1000.0) as usize].to_vec();
-                let len = theta.len();
-                for (i, val) in theta[1..len - 2].iter_mut().enumerate() {
+                let mut vals = vals[..(y * 1000.0) as usize].to_vec();
+                let len = vals.len();
+                for (i, val) in vals[1..len - 2].iter_mut().enumerate() {
                     *val *= if i % 2 == 1 { 4.0 } else { 2.0 }
                 }
                 (
                     planet.orbit
                         * (1.0 - planet.eccentricity.powi(2)).powf(1.5)
-                        // 1 / (2 * pi)
-                        * std::f32::consts::FRAC_1_PI
-                        / 2.0
-                        // h / 3
+                        // 1/2π
+                        *  std::f32::consts::FRAC_1_PI / 2.0
+                        // h/3
                         * 0.001
                         / 3.0
-                        * theta.into_iter().sum::<f32>(),
+                        * vals.into_iter().sum::<f32>(),
                     y,
                 )
             })
