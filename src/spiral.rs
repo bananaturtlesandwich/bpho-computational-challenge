@@ -27,7 +27,7 @@ pub fn plot(
     let mut chart = ChartBuilder::on(root)
         .build_cartesian_2d(
             x(std::f32::consts::PI)..x(0.0),
-            y(std::f32::consts::PI / 2.0)..y(std::f32::consts::PI / 2.0 * 3.0),
+            y(std::f32::consts::FRAC_PI_2)..y(std::f32::consts::FRAC_PI_2 * 3.0),
         )
         .unwrap();
     for line in lines.iter() {

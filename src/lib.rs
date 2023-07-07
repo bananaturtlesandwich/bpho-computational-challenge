@@ -92,16 +92,7 @@ impl App {
         self.spiral.get_data_mut().2 = (0.0..max)
             .step(max / 1234.0)
             .values()
-            .map(|time| {
-                let calc = |planet: &Planet| {
-                    let θ = 2.0 * std::f32::consts::PI * time / planet.orbit;
-                    let (sin, cos) = θ.sin_cos();
-                    let r = (planet.distance * (1.0 - planet.eccentricity.powi(2)))
-                        / (1.0 - planet.eccentricity * cos);
-                    (r * cos, r * sin)
-                };
-                [calc(p1), calc(p2)]
-            })
+            .map(|years| [p1.coord(p1.angle(years)), p2.coord(p2.angle(years))])
             .collect()
     }
 }
@@ -212,6 +203,23 @@ struct Planet {
     radius: f32,
     orbit: f32,
     inclination: f32,
+}
+
+impl Planet {
+    fn coord(&self, θ: f32) -> (f32, f32) {
+        let (sin, cos) = θ.sin_cos();
+        let r =
+            (self.distance * (1.0 - self.eccentricity.powi(2))) / (1.0 - self.eccentricity * cos);
+        (r * cos, r * sin)
+    }
+    fn position(&self, θ: f32) -> (f32, f32, f32) {
+        let (x, y) = self.coord(θ);
+        let (sin, cos) = self.inclination.to_radians().sin_cos();
+        (x * cos, x * sin, y)
+    }
+    fn angle(&self, years: f32) -> f32 {
+        2.0 * std::f32::consts::PI * years / self.orbit
+    }
 }
 
 const PLANETS: [Planet; 9] = [

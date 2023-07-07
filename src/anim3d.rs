@@ -30,17 +30,12 @@ pub fn plot(
         ))
         .unwrap();
     for planet in super::PLANETS.iter() {
-        let map = |θ: f32| {
-            let (sin, cos) = θ.to_radians().sin_cos();
-            let r = (planet.distance * (1.0 - planet.eccentricity.powi(2)))
-                / (1.0 - planet.eccentricity * cos);
-            let (x, y) = (r * cos, r * sin);
-            let (sin, cos) = planet.inclination.to_radians().sin_cos();
-            (x * cos, x * sin, y)
-        };
         chart
             .draw_series(LineSeries::new(
-                (0_f32..361.0).step(2.5).values().map(map),
+                (0_f32..361.0)
+                    .step(2.5)
+                    .values()
+                    .map(|θ| planet.position(θ.to_radians())),
                 planet.colour,
             ))
             .unwrap();
@@ -48,9 +43,9 @@ pub fn plot(
         chart
             .plotting_area()
             .draw(
-                &(EmptyElement::at(map(
-                    time.elapsed().as_secs_f32() * speed * 360.0 / planet.orbit
-                )) + Circle::new(
+                &(EmptyElement::at(
+                    planet.position(planet.angle(time.elapsed().as_secs_f32() * speed)),
+                ) + Circle::new(
                     (0, 0),
                     rad,
                     ShapeStyle {

@@ -3,9 +3,9 @@ use plotters::prelude::*;
 pub fn plot(
     root: &mut DrawingArea<egui_plotter::EguiBackend, plotters::coord::Shift>,
     _: &egui_plotter::Transform,
-    (index, points): &(usize, Vec<(f32, f32)>),
+    (i, points): &(usize, Vec<(f32, f32)>),
 ) {
-    let planet = &super::PLANETS[*index];
+    let planet = &super::PLANETS[*i];
     let mut chart = ChartBuilder::on(root)
         .set_left_and_bottom_label_area_size(25)
         .build_cartesian_2d(0_f32..planet.orbit * 3.0, 0_f32..20.0)

@@ -23,12 +23,10 @@ pub fn plot(
     for planet in super::PLANETS.iter() {
         chart
             .draw_series(LineSeries::new(
-                (0.0..361.0).step(2.5).values().map(|θ| {
-                    let (sin, cos) = (θ as f32).to_radians().sin_cos();
-                    let r = (planet.distance * (1.0 - planet.eccentricity.powi(2)))
-                        / (1.0 - planet.eccentricity * cos);
-                    (r * cos, r * sin)
-                }),
+                (0_f32..361.0)
+                    .step(2.5)
+                    .values()
+                    .map(|θ| planet.coord(θ.to_radians())),
                 planet.colour,
             ))
             .unwrap();
