@@ -49,3 +49,15 @@ pub fn plot(
             .unwrap();
     }
 }
+impl super::App {
+    pub fn spiral(&mut self) {
+        let &(i1, i2, ..) = self.spiral.get_data();
+        let (p1, p2) = (&super::PLANETS[i1], &super::PLANETS[i2]);
+        let max = 10.0 * p1.orbit.max(p2.orbit);
+        self.spiral.get_data_mut().2 = (0.0..max)
+            .step(max / 1234.0)
+            .values()
+            .map(|years| [p1.coord(p1.angle(years)), p2.coord(p2.angle(years))])
+            .collect()
+    }
+}

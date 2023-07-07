@@ -1,10 +1,12 @@
 #![allow(mixed_script_confusables)]
 
+use egui_plotter::Chart;
 use plotters::style::full_palette;
 
 mod angles;
 mod anim2d;
 mod anim3d;
+mod centre;
 mod kepler;
 mod orbits;
 mod spiral;
@@ -17,21 +19,22 @@ enum Tab {
     Anim3D,
     Angles,
     Spiral,
+    Centre,
 }
 
 pub struct App {
-    kepler: egui_plotter::Chart<f32>,
-    orbits: egui_plotter::Chart<f32>,
-    anim2d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
-    anim3d: egui_plotter::Chart<(f32, instant::Instant, f32)>,
-    angles: egui_plotter::Chart<(usize, Vec<(f32, f32)>)>,
-    spiral: egui_plotter::Chart<(usize, usize, Vec<[(f32, f32); 2]>)>,
+    kepler: Chart<f32>,
+    orbits: Chart<f32>,
+    anim2d: Chart<(f32, instant::Instant, f32)>,
+    anim3d: Chart<(f32, instant::Instant, f32)>,
+    angles: Chart<(usize, Vec<(f32, f32)>)>,
+    spiral: Chart<(usize, usize, Vec<[(f32, f32); 2]>)>,
+    centre: Chart<(f32, usize)>,
     tab: Tab,
 }
 
 impl App {
     pub fn new(ctx: &eframe::CreationContext) -> Self {
-        use egui_plotter::*;
         // prevents artifacts on graphs
         ctx.egui_ctx
             .tessellation_options_mut(|tes| tes.feathering = false);
@@ -43,57 +46,16 @@ impl App {
             anim3d: Chart::new((1.0, instant::Instant::now(), 1.0))
                 .pitch(0.3)
                 .yaw(0.7)
-                .mouse(MouseConfig::default().rotate(true))
+                .mouse(egui_plotter::MouseConfig::default().rotate(true))
                 .builder_cb(Box::new(anim3d::plot)),
             angles: Chart::new((8, Vec::new())).builder_cb(Box::new(angles::plot)),
             spiral: Chart::new((1, 2, Vec::new())).builder_cb(Box::new(spiral::plot)),
+            centre: Chart::new((1.0, 2)).builder_cb(Box::new(centre::plot)),
             tab: Tab::Kepler,
         };
         app.angles();
         app.spiral();
         app
-    }
-    fn angles(&mut self) {
-        use plotters::prelude::*;
-        let planet = &PLANETS[self.angles.get_data().0];
-        let vals: Vec<_> = (0_f32..20.0)
-            .step(0.001)
-            .values()
-            .map(|θ| (1.0 - planet.eccentricity * θ.cos()).powi(-2))
-            .collect();
-        self.angles.get_data_mut().1 = (0.01_f32..20.0)
-            .step(0.1)
-            .values()
-            .map(|y| {
-                let mut vals = vals[..(y * 1000.0) as usize].to_vec();
-                let len = vals.len();
-                for (i, val) in vals[1..len - 2].iter_mut().enumerate() {
-                    *val *= if i % 2 == 1 { 4.0 } else { 2.0 }
-                }
-                (
-                    planet.orbit
-                        * (1.0 - planet.eccentricity.powi(2)).powf(1.5)
-                        // 1/2π
-                        *  std::f32::consts::FRAC_1_PI / 2.0
-                        // h/3
-                        * 0.001
-                        / 3.0
-                        * vals.into_iter().sum::<f32>(),
-                    y,
-                )
-            })
-            .collect();
-    }
-    fn spiral(&mut self) {
-        use plotters::prelude::*;
-        let &(i1, i2, ..) = self.spiral.get_data();
-        let (p1, p2) = (&PLANETS[i1], &PLANETS[i2]);
-        let max = 10.0 * p1.orbit.max(p2.orbit);
-        self.spiral.get_data_mut().2 = (0.0..max)
-            .step(max / 1234.0)
-            .values()
-            .map(|years| [p1.coord(p1.angle(years)), p2.coord(p2.angle(years))])
-            .collect()
     }
 }
 
@@ -113,52 +75,36 @@ impl eframe::App for App {
                 tab("3D animated orbits", Tab::Anim3D);
                 tab("Orbit angle vs time", Tab::Angles);
                 tab("Spirographs", Tab::Spiral);
+                tab("Relative orbits", Tab::Centre);
+                fn speed(ui: &mut egui::Ui, val: &mut f32) {
+                    ui.add(egui::Slider::new(val, 0.1..=10.0).suffix(" years/second"));
+                }
+                fn planets(ui: &mut egui::Ui, id: &str, i: &mut usize) -> egui::Response {
+                    egui::ComboBox::from_id_source(id)
+                        .show_index(ui, i, PLANETS.len(), |i| PLANETS[i].name)
+                }
                 match self.tab {
-                    Tab::Anim2D => {
-                        ui.add(
-                            egui::Slider::new(&mut self.anim2d.get_data_mut().2, 0.1..=10.0)
-                                .suffix(" years/second"),
-                        );
+                    Tab::Anim2D => speed(ui, &mut self.anim2d.get_data_mut().2),
+                    Tab::Anim3D => speed(ui, &mut self.anim3d.get_data_mut().2),
+                    Tab::Angles
+                        if planets(ui, "angles", &mut self.angles.get_data_mut().0).changed() =>
+                    {
+                        self.angles()
                     }
-                    Tab::Anim3D => {
-                        ui.add(
-                            egui::Slider::new(&mut self.anim3d.get_data_mut().2, 0.1..=10.0)
-                                .suffix(" years/second"),
-                        );
+                    Tab::Spiral
+                        if planets(ui, "p1", &mut self.spiral.get_data_mut().0).changed()
+                            | planets(ui, "p2", &mut self.spiral.get_data_mut().1).changed() =>
+                    {
+                        self.spiral()
                     }
-                    Tab::Angles => {
-                        if egui::ComboBox::from_id_source("angles")
-                            .show_index(ui, &mut self.angles.get_data_mut().0, PLANETS.len(), |i| {
-                                PLANETS[i].name
-                            })
-                            .changed()
-                        {
-                            self.angles()
-                        }
-                    }
-                    Tab::Spiral => {
-                        if egui::ComboBox::from_id_source("p1")
-                            .show_index(ui, &mut self.spiral.get_data_mut().0, PLANETS.len(), |i| {
-                                PLANETS[i].name
-                            })
-                            .changed()
-                            | egui::ComboBox::from_id_source("p2")
-                                .show_index(
-                                    ui,
-                                    &mut self.spiral.get_data_mut().1,
-                                    PLANETS.len(),
-                                    |i| PLANETS[i].name,
-                                )
-                                .changed()
-                        {
-                            self.spiral()
-                        }
+                    Tab::Centre => {
+                        planets(ui, "centre", &mut self.centre.get_data_mut().1);
                     }
                     _ => (),
                 }
                 if matches!(
                     self.tab,
-                    Tab::Kepler | Tab::Orbits | Tab::Anim2D | Tab::Anim3D
+                    Tab::Kepler | Tab::Orbits | Tab::Anim2D | Tab::Anim3D | Tab::Centre
                 ) {
                     ui.label("zoom: scroll/pinch");
                 }
@@ -173,6 +119,7 @@ impl eframe::App for App {
                 Tab::Anim3D => self.anim3d.draw(ui),
                 Tab::Angles => self.angles.draw(ui),
                 Tab::Spiral => self.spiral.draw(ui),
+                Tab::Centre => self.centre.draw(ui),
             });
             ui.input(|e| {
                 let set = |scale: &mut f32| {
@@ -185,6 +132,7 @@ impl eframe::App for App {
                     Tab::Orbits => set(self.orbits.get_data_mut()),
                     Tab::Anim2D => set(&mut self.anim2d.get_data_mut().0),
                     Tab::Anim3D => set(&mut self.anim3d.get_data_mut().0),
+                    Tab::Centre => set(&mut self.centre.get_data_mut().0),
                     _ => (),
                 }
             });
