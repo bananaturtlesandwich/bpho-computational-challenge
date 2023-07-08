@@ -11,23 +11,11 @@ pub fn plot(
         false => p2,
     };
     // axis bounds are the same as the maximums and minimums of the largest orbit (slightly adjusted)
-    let x = |θ: f32| {
-        let cos = θ.cos();
-        (far.distance * (1.0 - far.eccentricity.powi(2))) / (1.0 - far.eccentricity * cos)
-            * cos
-            * 1.1
-    };
-    let y = |θ: f32| {
-        let (sin, cos) = θ.sin_cos();
-        (far.distance * (1.0 - far.eccentricity.powi(2))) / (1.0 - far.eccentricity * cos)
-            * sin
-            * 1.1
-    };
-
     let mut chart = ChartBuilder::on(root)
         .build_cartesian_2d(
-            x(std::f32::consts::PI)..x(0.0),
-            y(std::f32::consts::FRAC_PI_2)..y(std::f32::consts::FRAC_PI_2 * 3.0),
+            far.coord(std::f32::consts::PI).0 * 1.1..far.coord(0.0).0 * 1.1,
+            far.coord(std::f32::consts::FRAC_PI_2).1 * 1.1
+                ..far.coord(std::f32::consts::FRAC_PI_2 * 3.0).1 * 1.1,
         )
         .unwrap();
     for line in lines.iter() {
@@ -38,12 +26,10 @@ pub fn plot(
     for planet in [p1, p2] {
         chart
             .draw_series(LineSeries::new(
-                (0.0..361.0).step(2.5).values().map(|θ| {
-                    let (sin, cos) = (θ as f32).to_radians().sin_cos();
-                    let r = (planet.distance * (1.0 - planet.eccentricity.powi(2)))
-                        / (1.0 - planet.eccentricity * cos);
-                    (r * cos, r * sin)
-                }),
+                (0_f32..361.0)
+                    .step(2.5)
+                    .values()
+                    .map(|θ| planet.coord(θ.to_radians())),
                 planet.colour,
             ))
             .unwrap();
@@ -51,10 +37,10 @@ pub fn plot(
 }
 impl super::App {
     pub fn spiral(&mut self) {
-        let &(i1, i2, ..) = self.spiral.get_data();
-        let (p1, p2) = (&super::PLANETS[i1], &super::PLANETS[i2]);
+        let (i1, i2, points) = self.spiral.get_data_mut();
+        let (p1, p2) = (&super::PLANETS[*i1], &super::PLANETS[*i2]);
         let max = 10.0 * p1.orbit.max(p2.orbit);
-        self.spiral.get_data_mut().2 = (0.0..max)
+        *points = (0.0..max)
             .step(max / 1234.0)
             .values()
             .map(|years| [p1.coord(p1.angle(years)), p2.coord(p2.angle(years))])

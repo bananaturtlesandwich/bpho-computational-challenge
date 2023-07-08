@@ -43,13 +43,14 @@ pub fn plot(
 
 impl super::App {
     pub fn angles(&mut self) {
-        let planet = &super::PLANETS[self.angles.get_data().0];
+        let (i, points) = self.angles.get_data_mut();
+        let planet = &super::PLANETS[*i];
         let vals: Vec<_> = (0_f32..20.0)
             .step(0.001)
             .values()
             .map(|θ| (1.0 - planet.eccentricity * θ.cos()).powi(-2))
             .collect();
-        self.angles.get_data_mut().1 = (0.01_f32..20.0)
+        *points = (0.01_f32..20.0)
             .step(0.1)
             .values()
             .map(|y| {

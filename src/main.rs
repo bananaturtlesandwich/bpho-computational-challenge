@@ -5,7 +5,7 @@ fn main() {
     eframe::run_native(
         "bpho computational challenge",
         eframe::NativeOptions {
-            initial_window_size: Some(eframe::egui::vec2(800.0, 600.0)),
+            initial_window_size: Some(eframe::egui::vec2(1200.0, 600.0)),
             run_and_return: false,
             ..Default::default()
         },

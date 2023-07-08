@@ -29,7 +29,7 @@ pub struct App {
     anim3d: Chart<(f32, instant::Instant, f32)>,
     angles: Chart<(usize, Vec<(f32, f32)>)>,
     spiral: Chart<(usize, usize, Vec<[(f32, f32); 2]>)>,
-    centre: Chart<(f32, usize)>,
+    centre: Chart<(f32, usize, Vec<Vec<(f32, f32)>>)>,
     tab: Tab,
 }
 
@@ -45,16 +45,17 @@ impl App {
                 .builder_cb(Box::new(anim2d::plot)),
             anim3d: Chart::new((1.0, instant::Instant::now(), 1.0))
                 .pitch(0.3)
-                .yaw(0.7)
+                .yaw(-0.7)
                 .mouse(egui_plotter::MouseConfig::default().rotate(true))
                 .builder_cb(Box::new(anim3d::plot)),
             angles: Chart::new((8, Vec::new())).builder_cb(Box::new(angles::plot)),
             spiral: Chart::new((1, 2, Vec::new())).builder_cb(Box::new(spiral::plot)),
-            centre: Chart::new((1.0, 2)).builder_cb(Box::new(centre::plot)),
+            centre: Chart::new((1.0, 2, Vec::new())).builder_cb(Box::new(centre::plot)),
             tab: Tab::Kepler,
         };
         app.angles();
         app.spiral();
+        app.centre();
         app
     }
 }
@@ -97,8 +98,10 @@ impl eframe::App for App {
                     {
                         self.spiral()
                     }
-                    Tab::Centre => {
-                        planets(ui, "centre", &mut self.centre.get_data_mut().1);
+                    Tab::Centre
+                        if planets(ui, "centre", &mut self.centre.get_data_mut().1).changed() =>
+                    {
+                        self.centre()
                     }
                     _ => (),
                 }
@@ -143,6 +146,7 @@ impl eframe::App for App {
     }
 }
 
+#[derive(PartialEq)]
 struct Planet {
     name: &'static str,
     colour: plotters::style::RGBColor,
@@ -167,6 +171,9 @@ impl Planet {
     }
     fn angle(&self, years: f32) -> f32 {
         2.0 * std::f32::consts::PI * years / self.orbit
+    }
+    fn coord_when(&self, planet: &Self, θ: f32) -> (f32, f32) {
+        self.coord(θ * planet.orbit / self.orbit)
     }
 }
 
