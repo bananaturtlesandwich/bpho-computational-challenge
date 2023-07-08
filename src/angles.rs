@@ -7,13 +7,14 @@ pub fn plot(
 ) {
     let planet = &super::PLANETS[*i];
     let mut chart = ChartBuilder::on(root)
-        .set_left_and_bottom_label_area_size(25)
+        .x_label_area_size(40)
+        .y_label_area_size(50)
         .build_cartesian_2d(0_f32..planet.orbit * 3.0, 0_f32..20.0)
         .unwrap();
     chart
         .configure_mesh()
-        // .x_desc("time/years")
-        // .y_desc("orbit angle/radians")
+        .x_desc("time/years")
+        .y_desc("orbit angle/radians")
         .bold_line_style(full_palette::GREY_700)
         .light_line_style(full_palette::GREY_800)
         .axis_style(WHITE)

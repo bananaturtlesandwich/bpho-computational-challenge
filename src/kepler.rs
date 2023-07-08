@@ -6,13 +6,14 @@ pub fn plot(
     &scale: &f32,
 ) {
     let mut chart = ChartBuilder::on(root)
-        .set_left_and_bottom_label_area_size(25)
+        .x_label_area_size(40)
+        .y_label_area_size(55)
         .build_cartesian_2d(0.0..275.0 * scale, 0.0..275.0 * scale)
         .unwrap();
     chart
         .configure_mesh()
-        // .x_desc("distance from sun^1.5/AU")
-        // .y_desc("orbit time/years")
+        .x_desc("distance from sun^1.5/AU")
+        .y_desc("orbit time/years")
         .bold_line_style(full_palette::GREY_700)
         .light_line_style(full_palette::GREY_800)
         .axis_style(WHITE)
@@ -58,7 +59,14 @@ pub fn plot(
                     + Text::new(
                         planet.name,
                         (10, -10),
-                        FontDesc::new(FontFamily::Serif, 15.0, FontStyle::Normal).color(&WHITE),
+                        FontDesc::new(FontFamily::Serif, 15.0, FontStyle::Normal).color(&if scale
+                            > 0.1
+                            && planet.orbit < 2.0
+                        {
+                            TRANSPARENT
+                        } else {
+                            WHITE.into()
+                        }),
                     )
             },
         ))
