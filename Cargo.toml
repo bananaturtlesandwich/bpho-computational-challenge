@@ -1,6 +1,8 @@
 [package]
 name = "bpho-computational-challenge"
-version = "0.1.0"
+version = "1.0.0"
+authors = ["spuds"]
+repository = "https://github.com/bananaturtlesandwich/bpho-computational-challenge"
 edition = "2021"
 
 [dependencies]
