@@ -19,8 +19,11 @@ fn main() {
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
             .start(
-                "canvas", // hardcode it
-                eframe::WebOptions::default(),
+                "canvas",
+                eframe::WebOptions {
+                    follow_system_theme: false,
+                    ..eframe::WebOptions::default()
+                },
                 Box::new(|ctx| Box::new(bpho_computational_challenge::App::new(ctx))),
             )
             .await

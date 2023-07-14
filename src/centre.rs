@@ -7,20 +7,18 @@ pub fn plot(
 ) {
     let centre = &super::PLANETS[*i];
     let (mut maxx, mut minx, mut maxy, mut miny) = (0.0, 0.0, 0.0, 0.0);
-    for orbit in orbits.iter() {
-        for (x, y) in orbit.iter() {
-            if x > &maxx {
-                maxx = *x
-            }
-            if x < &minx {
-                minx = *x
-            }
-            if y > &maxy {
-                maxy = *y
-            }
-            if y < &miny {
-                miny = *y
-            }
+    for (x, y) in orbits.iter().flatten() {
+        if x > &maxx {
+            maxx = *x
+        }
+        if x < &minx {
+            minx = *x
+        }
+        if y > &maxy {
+            maxy = *y
+        }
+        if y < &miny {
+            miny = *y
         }
     }
     let mut chart = ChartBuilder::on(root)
