@@ -49,14 +49,23 @@ pub fn plot(
 
 impl super::App {
     pub fn centre(&mut self) {
-        let (_, i, points) = self.centre.get_data_mut();
+        let (_, i, orbits) = self.centre.get_data_mut();
         let centre = &super::PLANETS[*i];
-        *points = super::PLANETS
+        *orbits = super::PLANETS
             .iter()
             .filter(|p| p != &centre)
             .map(|planet| {
-                (0_f32..360.1)
-                    .step(0.1)
+                let max = match planet.near() {
+                    true => 2500.0,
+                    false => 250.0,
+                } * centre.orbit.max(planet.orbit);
+                (0_f32..max + 0.1)
+                    .step(
+                        max / match planet.near() {
+                            true => 500.0,
+                            false => 8000.0,
+                        },
+                    )
                     .values()
                     .map(|θ| {
                         let θ = θ.to_radians();

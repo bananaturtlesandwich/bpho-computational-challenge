@@ -175,6 +175,9 @@ impl Planet {
     fn coord_when(&self, planet: &Self, θ: f32) -> (f32, f32) {
         self.coord(θ * planet.orbit / self.orbit)
     }
+    fn near(&self) -> bool {
+        self.distance <= 1.0
+    }
 }
 
 const PLANETS: [Planet; 9] = [
