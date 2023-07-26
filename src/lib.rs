@@ -4,8 +4,6 @@ use egui_plotter::Chart;
 use plotters::style::full_palette;
 
 mod angles;
-mod anim2d;
-mod anim3d;
 mod centre;
 mod kepler;
 mod orbits;
@@ -15,8 +13,6 @@ mod spiral;
 enum Tab {
     Kepler,
     Orbits,
-    Anim2D,
-    Anim3D,
     Angles,
     Spiral,
     Centre,
@@ -24,9 +20,7 @@ enum Tab {
 
 pub struct App {
     kepler: Chart<f32>,
-    orbits: Chart<f32>,
-    anim2d: Chart<(f32, instant::Instant, f32)>,
-    anim3d: Chart<(f32, instant::Instant, f32)>,
+    orbits: Chart<(f32, instant::Instant, f32, bool, bool)>,
     angles: Chart<(usize, Vec<(f32, f32)>)>,
     spiral: Chart<(usize, usize, Vec<[(f32, f32); 2]>)>,
     centre: Chart<(f32, usize, Vec<Vec<(f32, f32)>>)>,
@@ -40,14 +34,11 @@ impl App {
             .tessellation_options_mut(|tes| tes.feathering = false);
         let mut app = Self {
             kepler: Chart::new(1.0).builder_cb(Box::new(kepler::plot)),
-            orbits: Chart::new(1.0).builder_cb(Box::new(orbits::plot)),
-            anim2d: Chart::new((1.0, instant::Instant::now(), 1.0))
-                .builder_cb(Box::new(anim2d::plot)),
-            anim3d: Chart::new((1.0, instant::Instant::now(), 1.0))
+            orbits: Chart::new((1.0, instant::Instant::now(), 1.0, false, false))
                 .pitch(0.3)
                 .yaw(-0.7)
                 .mouse(egui_plotter::MouseConfig::default().rotate(true))
-                .builder_cb(Box::new(anim3d::plot)),
+                .builder_cb(Box::new(orbits::plot)),
             angles: Chart::new((8, Vec::new())).builder_cb(Box::new(angles::plot)),
             spiral: Chart::new((1, 2, Vec::new())).builder_cb(Box::new(spiral::plot)),
             centre: Chart::new((1.0, 2, Vec::new())).builder_cb(Box::new(centre::plot)),
@@ -72,21 +63,24 @@ impl eframe::App for App {
                 };
                 tab("Kepler's third law", Tab::Kepler);
                 tab("Orbits", Tab::Orbits);
-                tab("2D animated orbits", Tab::Anim2D);
-                tab("3D animated orbits", Tab::Anim3D);
                 tab("Orbit angle vs time", Tab::Angles);
                 tab("Spirographs", Tab::Spiral);
                 tab("Relative orbits", Tab::Centre);
-                fn speed(ui: &mut egui::Ui, val: &mut f32) {
-                    ui.add(egui::Slider::new(val, 0.1..=10.0).suffix(" years/second"));
-                }
                 fn planets(ui: &mut egui::Ui, id: &str, i: &mut usize) -> egui::Response {
                     egui::ComboBox::from_id_source(id)
                         .show_index(ui, i, PLANETS.len(), |i| PLANETS[i].name)
                 }
                 match self.tab {
-                    Tab::Anim2D => speed(ui, &mut self.anim2d.get_data_mut().2),
-                    Tab::Anim3D => speed(ui, &mut self.anim3d.get_data_mut().2),
+                    Tab::Orbits => {
+                        ui.checkbox(&mut self.orbits.get_data_mut().3, "animated");
+                        ui.checkbox(&mut self.orbits.get_data_mut().4, "3d");
+                        if self.orbits.get_data().3 {
+                            ui.add(
+                                egui::Slider::new(&mut self.orbits.get_data_mut().2, 0.1..=10.0)
+                                    .suffix(" years/second"),
+                            );
+                        }
+                    }
                     Tab::Angles
                         if planets(ui, "angles", &mut self.angles.get_data_mut().0).changed() =>
                     {
@@ -105,21 +99,16 @@ impl eframe::App for App {
                     }
                     _ => (),
                 }
-                if matches!(
-                    self.tab,
-                    Tab::Kepler | Tab::Orbits | Tab::Anim2D | Tab::Anim3D | Tab::Centre
-                ) {
+                if matches!(self.tab, Tab::Kepler | Tab::Orbits | Tab::Centre) {
                     ui.label("zoom: scroll/pinch");
                 }
-                if matches!(self.tab, Tab::Anim3D) {
-                    ui.label("rotate: left click + drag");
+                if matches!(self.tab, Tab::Orbits if self.orbits.get_data().4) {
+                    ui.label("rotate: click + drag");
                 }
             });
             ui.vertical_centered_justified(|ui| match self.tab {
                 Tab::Kepler => self.kepler.draw(ui),
                 Tab::Orbits => self.orbits.draw(ui),
-                Tab::Anim2D => self.anim2d.draw(ui),
-                Tab::Anim3D => self.anim3d.draw(ui),
                 Tab::Angles => self.angles.draw(ui),
                 Tab::Spiral => self.spiral.draw(ui),
                 Tab::Centre => self.centre.draw(ui),
@@ -132,14 +121,12 @@ impl eframe::App for App {
                 };
                 match self.tab {
                     Tab::Kepler => set(self.kepler.get_data_mut()),
-                    Tab::Orbits => set(self.orbits.get_data_mut()),
-                    Tab::Anim2D => set(&mut self.anim2d.get_data_mut().0),
-                    Tab::Anim3D => set(&mut self.anim3d.get_data_mut().0),
+                    Tab::Orbits => set(&mut self.orbits.get_data_mut().0),
                     Tab::Centre => set(&mut self.centre.get_data_mut().0),
                     _ => (),
                 }
             });
-            if matches!(self.tab, Tab::Anim2D | Tab::Anim3D) {
+            if matches!(self.tab, Tab::Orbits if self.orbits.get_data().3) {
                 ctx.request_repaint()
             }
         });

@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 plotters = { version = "0.3", default-features = false, features = ["bitmap_backend", "line_series", "point_series", "full_palette"] }
-egui-plotter = { git = "https://github.com/bananaturtlesandwich/egui-plotter", rev = "b556d36" }
+egui-plotter = { git = "https://github.com/Gip-Gip/egui-plotter", rev = "2a4b060" }
 eframe = "0.22"
 instant = { version = "0.1", features = ["wasm-bindgen"]}
 
