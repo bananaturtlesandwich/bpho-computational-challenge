@@ -1,5 +1,16 @@
 use plotters::prelude::*;
 
+const SUN: [&super::Planet; 1] = [&super::Planet {
+    name: "Sun",
+    colour: full_palette::AMBER,
+    distance: 0.0,
+    eccentricity: 0.0,
+    // not accurate but otherwise fills the screen
+    radius: 4.0,
+    orbit: 1.0,
+    inclination: 0.0,
+}];
+
 pub fn plot(
     root: &mut DrawingArea<egui_plotter::EguiBackend, plotters::coord::Shift>,
     _: &egui_plotter::Transform,
@@ -39,6 +50,7 @@ pub fn plot(
     for (orbit, colour) in orbits.iter().zip(
         super::PLANETS
             .iter()
+            .chain(SUN.into_iter())
             .filter_map(|p| (p != centre).then_some(p.colour)),
     ) {
         chart
@@ -53,6 +65,7 @@ impl super::App {
         let centre = &super::PLANETS[*i];
         *orbits = super::PLANETS
             .iter()
+            .chain(SUN.into_iter())
             .filter(|p| p != &centre)
             .map(|planet| {
                 let max = match planet.near() {
