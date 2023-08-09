@@ -70,6 +70,13 @@ impl eframe::App for App {
                     egui::ComboBox::from_id_source(id)
                         .show_index(ui, i, PLANETS.len(), |i| PLANETS[i].name)
                 }
+                ui.hyperlink_to(format!("source {}", egui::special_emojis::GITHUB), format!("https://github.com/bananaturtlesandwich/bpho-computational-challenge/blob/main/src/{}.rs", match self.tab {
+                    Tab::Kepler => "kepler",
+                    Tab::Orbits => "orbits",
+                    Tab::Angles => "angles",
+                    Tab::Spiral => "spiral",
+                    Tab::Centre => "centre",
+                }));
                 match self.tab {
                     Tab::Orbits => {
                         ui.checkbox(&mut self.orbits.get_data_mut().3, "animated");
