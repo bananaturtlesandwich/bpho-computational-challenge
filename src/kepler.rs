@@ -25,7 +25,7 @@ pub fn plot(
             [0.0, 300.0].into_iter().map(best_fit(|| {
                 super::PLANETS
                     .iter()
-                    .map(|planet| (planet.orbit, planet.distance.powf(1.5)))
+                    .map(|planet| (planet.distance.powf(1.5), planet.orbit))
             })),
             GREEN,
         ))
@@ -36,24 +36,14 @@ pub fn plot(
             0,
             RGBAColor::default(),
             &|planet, _, _| {
-                let rad = planet.radius.max(1.0);
-                EmptyElement::at((planet.orbit, planet.distance.powf(1.5)))
+                EmptyElement::at((planet.distance.powf(1.5), planet.orbit))
                     + Circle::new(
                         (0, 0),
-                        rad,
+                        planet.radius.max(1.0),
                         ShapeStyle {
                             color: planet.colour.into(),
                             filled: true,
                             stroke_width: 0,
-                        },
-                    )
-                    + Circle::new(
-                        (0, 0),
-                        rad,
-                        ShapeStyle {
-                            color: WHITE.into(),
-                            filled: false,
-                            stroke_width: 1,
                         },
                     )
                     + Text::new(
