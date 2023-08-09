@@ -45,6 +45,7 @@ impl super::App {
     pub fn angles(&mut self) {
         let (i, points) = self.angles.get_data_mut();
         let planet = &super::PLANETS[*i];
+        // precalculate y-vals
         let vals: Vec<_> = (0_f32..20.0)
             .step(0.001)
             .values()
@@ -55,11 +56,17 @@ impl super::App {
             .values()
             .map(|y| {
                 let mut vals = vals[..(y * 1000.0) as usize].to_vec();
+                // h/3 * (y0 + 4y1 + 2y2 + 4y3 + ... + 2y(n-1) + yn)
                 let len = vals.len();
                 for (i, val) in vals[1..len - 2].iter_mut().enumerate() {
-                    *val *= if i % 2 == 1 { 4.0 } else { 2.0 }
+                    *val *= match i % 2 == 1 {
+                        true => 4.0,
+                        false => 2.0,
+                    }
                 }
                 (
+                    // P(1-ecc^2)^1.5 * 1/2π * integral of (1 / (1-ecc*cosθ)^2)
+                    // evaluated using simpson's rule ------^
                     planet.orbit
                         * (1.0 - planet.eccentricity.powi(2)).powf(1.5)
                         // 1/2π
