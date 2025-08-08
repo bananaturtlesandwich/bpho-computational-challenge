@@ -16,7 +16,7 @@ jobs:
           override: true
       - uses: jetli/trunk-action@v0.4.0
       - uses: Swatinem/rust-cache@v1
-      - run: trunk build --release --public-url "${GITHUB_REPOSITORY#*/}"
+      - run: trunk build --release
       - uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: dist
