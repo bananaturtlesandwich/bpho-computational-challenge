@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>bpho computational challenge</title>
+        
+<script type="module">
+import init, * as bindings from '/bpho-computational-challenge-35400f56b0dfa0d2.js';
+const wasm = await init({ module_or_path: '/bpho-computational-challenge-35400f56b0dfa0d2_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+        
+        <style>
+            html,
+            body,
+            canvas {
+                margin: 0px;
+                padding: 0px;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+        </style>
+    <link rel="modulepreload" href="/bpho-computational-challenge-35400f56b0dfa0d2.js" crossorigin="anonymous" integrity="sha384-HU6qhzSUyray6WrmccCBOln26P2IukYtnihs7zu1F2MI9YXfjqfd9JZqOTCLpwY7"><link rel="preload" href="/bpho-computational-challenge-35400f56b0dfa0d2_bg.wasm" crossorigin="anonymous" integrity="sha384-jplubyP6U8iMxtyBI6McPYu4zsRD7fTWNv/Kp1lHE16gFWLQTreqVKmZ17CvzqvL" as="fetch" type="application/wasm"></head>
+    <body>
+        <noscript>enable javascript in your browser!</noscript>
+        <canvas id="canvas"></canvas>
+    </body>
+</html>
